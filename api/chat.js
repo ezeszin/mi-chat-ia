@@ -1,7 +1,7 @@
 // ===============================================
 // API Chat usando OpenRouter (modelo gratuito Mistral-7B)
 // Lee la API Key desde Vercel: OPENROUTER_API_KEY
-// Configurado para ESM y captura correcta de output
+// Ajustado para generar respuesta real y capturar correctamente output
 // ===============================================
 
 export default async function handler(req, res) {
@@ -23,10 +23,10 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: "mistralai/mistral-7b-instruct:free",
         messages: [
-          { role: "system", content: "Sos una IA útil." },
+          { role: "system", content: "Sos una IA útil y respondés de manera clara y completa." },
           { role: "user", content: message }
         ],
-        max_tokens: 300
+        max_tokens: 500
       })
     });
 
