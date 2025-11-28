@@ -1,29 +1,48 @@
-// api/chat.js
 export default async function handler(req, res) {
   try {
-    const { message } = req.method === "POST" ? JSON.parse(req.body) : { message: null };
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Método no permitido" });
+    }
 
-    if (!message) return res.status(400).json({ error: "No message provided" });
+    const { message } = req.body;
 
-    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+    if (!message) {
+      return res.status(400).json({ error: "Falta el campo 'message'" });
+    }
+
+    // Leer la API Key desde Vercel
+    const apiKey = process.env.OPENAI_API_KEY;
+
+    if (!apiKey) {
+      return res.status(500).json({ error: "API Key no configurada" });
+    }
+
+    // Llamada a la API de OpenAI
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        messages: [{ role: "user", content: message }],
-        max_tokens: 200
+        messages: [
+          { role: "system", content: "Sos una IA útil." },
+          { role: "user", content: message },
+        ],
       }),
     });
 
-    const data = await resp.json();
-    const reply = data?.choices?.[0]?.message?.content ?? "No reply";
+    const data = await response.json();
 
-    res.status(200).json({ reply });
-  } catch (err) {
-    console.error(err);
+    if (!response.ok) {
+      return res.status(500).json({ error: data });
+    }
+
+    res.status(200).json({ reply: data.choices[0].message.content });
+
+  } catch (error) {
+    console.error("ERROR SERVER:", error);
     res.status(500).json({ error: "Server error" });
   }
 }
