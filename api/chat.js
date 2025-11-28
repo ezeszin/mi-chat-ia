@@ -1,4 +1,7 @@
-// Redeploy Vercel
+// ===============================================
+// API Chat usando OpenRouter (modelo gratuito Mistral-Tiny)
+// Lee la API Key desde Vercel: OPENROUTER_API_KEY
+// ===============================================
 
 export default async function handler(req, res) {
   try {
@@ -12,27 +15,24 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Falta el campo 'message'" });
     }
 
-    // Leer la API Key desde Vercel
-    const apiKey = process.env.OPENAI_API_KEY;
-
+    const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ error: "API Key no configurada" });
+      return res.status(500).json({ error: "API Key de OpenRouter no configurada" });
     }
 
-    // Llamada a la API de OpenAI
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+        "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "mistral-tiny",
         messages: [
           { role: "system", content: "Sos una IA útil." },
-          { role: "user", content: message },
-        ],
-      }),
+          { role: "user", content: message }
+        ]
+      })
     });
 
     const data = await response.json();
@@ -41,7 +41,8 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: data });
     }
 
-    res.status(200).json({ reply: data.choices[0].message.content });
+    const reply = data?.choices?.[0]?.message?.content || "No hay respuesta";
+    res.status(200).json({ reply });
 
   } catch (error) {
     console.error("ERROR SERVER:", error);
