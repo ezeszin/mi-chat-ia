@@ -1,7 +1,7 @@
 // ===============================================
 // API Chat usando OpenRouter (modelo gratuito Mistral-7B)
-// Ajuste para capturar la respuesta real en output_text
 // Lee la API Key desde Vercel: OPENROUTER_API_KEY
+// Configurado para ESM y captura correcta de output
 // ===============================================
 
 export default async function handler(req, res) {
@@ -26,15 +26,19 @@ export default async function handler(req, res) {
           { role: "system", content: "Sos una IA útil." },
           { role: "user", content: message }
         ],
-        max_tokens: 300 // asegura que el modelo devuelva algo de texto
+        max_tokens: 300
       })
     });
 
     const data = await response.json();
+
     if (!response.ok) return res.status(500).json({ error: data });
 
-    // Leer preferentemente output_text si está presente
-    const reply = data.output_text?.trim() || "No hay respuesta";
+    // Captura preferente: output_text si existe, sino fallback
+    const reply = data.output_text?.trim() || 
+                  data?.choices?.[0]?.message?.content || 
+                  data?.choices?.[0]?.content || 
+                  "No hay respuesta";
 
     res.status(200).json({ reply });
 
